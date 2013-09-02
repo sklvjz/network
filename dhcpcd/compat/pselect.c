@@ -1,4 +1,4 @@
-/*
+/* 
  * dhcpcd - DHCP client daemon
  * Copyright (c) 2006-2013 Roy Marples <roy@marples.name>
  * All rights reserved
@@ -25,24 +25,41 @@
  * SUCH DAMAGE.
  */
 
-#ifndef ARP_H
-#define ARP_H
+#include <sys/time.h>
+#include <sys/types.h>
 
-/* ARP timings from RFC5227 */
-#define PROBE_WAIT		 1
-#define PROBE_NUM		 3
-#define PROBE_MIN		 1
-#define PROBE_MAX		 2
-#define ANNOUNCE_WAIT		 2
-#define ANNOUNCE_NUM		 2
-#define ANNOUNCE_INTERVAL	 2
-#define MAX_CONFLICTS		10
-#define RATE_LIMIT_INTERVAL	60
-#define DEFEND_INTERVAL		10
+#include <limits.h>
+#include <poll.h>
+#include <signal.h>
+#include <unistd.h>
 
-#include "dhcpcd.h"
+#include "pollts.h"
 
-void arp_announce(void *);
-void arp_probe(void *);
-void arp_start(struct interface *);
-#endif
+int
+pollts(struct pollfd *restrict fds, nfds_t nfds,
+    const struct timespec *restrict ts, const sigset_t *restrict sigmask)
+{
+	fd_set read_fds;
+	nfds_t n;
+	int maxfd, r;
+
+	FD_ZERO(&read_fds);
+	maxfd = 0;
+	for (n = 0; n < nfds; n++) {
+		if (fds[n].events & POLLIN) {
+			FD_SET(fds[n].fd, &read_fds);
+			if (fds[n].fd > maxfd)
+				maxfd = fds[n].fd;
+		}
+	}
+
+	r = pselect(maxfd + 1, &read_fds, NULL, NULL, ts, sigmask);
+	if (r > 0) {
+		for (n = 0; n < nfds; n++) {
+			fds[n].revents =
+			    FD_ISSET(fds[n].fd, &read_fds) ? POLLIN : 0;
+		}
+	}
+
+	return r;
+}

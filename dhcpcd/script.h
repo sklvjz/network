@@ -25,24 +25,13 @@
  * SUCH DAMAGE.
  */
 
-#ifndef ARP_H
-#define ARP_H
+#ifndef SCRIPT_H
+#define SCRIPT_H
 
-/* ARP timings from RFC5227 */
-#define PROBE_WAIT		 1
-#define PROBE_NUM		 3
-#define PROBE_MIN		 1
-#define PROBE_MAX		 2
-#define ANNOUNCE_WAIT		 2
-#define ANNOUNCE_NUM		 2
-#define ANNOUNCE_INTERVAL	 2
-#define MAX_CONFLICTS		10
-#define RATE_LIMIT_INTERVAL	60
-#define DEFEND_INTERVAL		10
+#include "net.h"
 
-#include "dhcpcd.h"
+void if_printoptions(void);
+int send_interface(int, const struct interface *);
+int script_runreason(const struct interface *, const char *);
 
-void arp_announce(void *);
-void arp_probe(void *);
-void arp_start(struct interface *);
 #endif

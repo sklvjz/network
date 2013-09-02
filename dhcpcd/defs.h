@@ -1,8 +1,7 @@
 /*
  * dhcpcd - DHCP client daemon
  * Copyright (c) 2006-2013 Roy Marples <roy@marples.name>
- * All rights reserved
-
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -25,24 +24,32 @@
  * SUCH DAMAGE.
  */
 
-#ifndef ARP_H
-#define ARP_H
+#ifndef CONFIG_H
+#define CONFIG_H
 
-/* ARP timings from RFC5227 */
-#define PROBE_WAIT		 1
-#define PROBE_NUM		 3
-#define PROBE_MIN		 1
-#define PROBE_MAX		 2
-#define ANNOUNCE_WAIT		 2
-#define ANNOUNCE_NUM		 2
-#define ANNOUNCE_INTERVAL	 2
-#define MAX_CONFLICTS		10
-#define RATE_LIMIT_INTERVAL	60
-#define DEFEND_INTERVAL		10
+#define PACKAGE			"dhcpcd"
+#define VERSION			"6.0.5"
 
-#include "dhcpcd.h"
+#ifndef CONFIG
+# define CONFIG			SYSCONFDIR "/" PACKAGE ".conf"
+#endif
+#ifndef SCRIPT
+# define SCRIPT			LIBEXECDIR "/" PACKAGE "-run-hooks"
+#endif
+#ifndef DUID
+# define DUID			SYSCONFDIR "/" PACKAGE ".duid"
+#endif
+#ifndef LEASEFILE
+# define LEASEFILE		DBDIR "/" PACKAGE "-%s.lease"
+#endif
+#ifndef LEASEFILE6
+# define LEASEFILE6		DBDIR "/" PACKAGE "-%s.lease6"
+#endif
+#ifndef PIDFILE
+# define PIDFILE		RUNDIR "/" PACKAGE "%s%s.pid"
+#endif
+#ifndef CONTROLSOCKET
+# define CONTROLSOCKET		RUNDIR "/" PACKAGE ".sock"
+#endif
 
-void arp_announce(void *);
-void arp_probe(void *);
-void arp_start(struct interface *);
 #endif

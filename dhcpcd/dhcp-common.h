@@ -25,24 +25,53 @@
  * SUCH DAMAGE.
  */
 
-#ifndef ARP_H
-#define ARP_H
+#ifndef DHCPCOMMON_H
+#define DHCPCOMMON_H
 
-/* ARP timings from RFC5227 */
-#define PROBE_WAIT		 1
-#define PROBE_NUM		 3
-#define PROBE_MIN		 1
-#define PROBE_MAX		 2
-#define ANNOUNCE_WAIT		 2
-#define ANNOUNCE_NUM		 2
-#define ANNOUNCE_INTERVAL	 2
-#define MAX_CONFLICTS		10
-#define RATE_LIMIT_INTERVAL	60
-#define DEFEND_INTERVAL		10
+#include <arpa/inet.h>
+#include <netinet/in.h>
 
-#include "dhcpcd.h"
+#include <stdint.h>
 
-void arp_announce(void *);
-void arp_probe(void *);
-void arp_start(struct interface *);
+#include "common.h"
+
+/* Max MTU - defines dhcp option length */
+#define MTU_MAX             1500
+#define MTU_MIN             576
+
+#define REQUEST		(1 << 0)
+#define UINT8		(1 << 1)
+#define UINT16		(1 << 2)
+#define SINT16		(1 << 3)
+#define UINT32		(1 << 4)
+#define SINT32		(1 << 5)
+#define ADDRIPV4	(1 << 6)
+#define STRING		(1 << 7)
+#define PAIR		(1 << 8)
+#define ARRAY		(1 << 9)
+#define RFC3361		(1 << 10)
+#define RFC3397		(1 << 11)
+#define RFC3442		(1 << 12)
+#define RFC5969		(1 << 13)
+#define ADDRIPV6	(1 << 14)
+#define BINHEX		(1 << 15)
+#define SCODE		(1 << 16)
+#define FLAG		(1 << 17)
+#define NOREQ		(1 << 18)
+
+struct dhcp_opt {
+	uint16_t option;
+	int type;
+	const char *var;
+};
+
+#define add_option_mask(var, val) (var[val >> 3] |= 1 << (val & 7))
+#define del_option_mask(var, val) (var[val >> 3] &= ~(1 << (val & 7)))
+#define has_option_mask(var, val) (var[val >> 3] & (1 << (val & 7)))
+int make_option_mask(const struct dhcp_opt *,uint8_t *, const char *, int);
+size_t encode_rfc1035(const char *src, uint8_t *dst);
+ssize_t decode_rfc3397(char *, ssize_t, int, const uint8_t *);
+ssize_t print_string(char *, ssize_t, int, const uint8_t *);
+ssize_t print_option(char *, ssize_t, int, int, const uint8_t *, const char *);
+
 #endif

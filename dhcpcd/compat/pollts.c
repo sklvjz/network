@@ -25,24 +25,39 @@
  * SUCH DAMAGE.
  */
 
-#ifndef ARP_H
-#define ARP_H
+#include <sys/time.h>
+#include <sys/types.h>
 
-/* ARP timings from RFC5227 */
-#define PROBE_WAIT		 1
-#define PROBE_NUM		 3
-#define PROBE_MIN		 1
-#define PROBE_MAX		 2
-#define ANNOUNCE_WAIT		 2
-#define ANNOUNCE_NUM		 2
-#define ANNOUNCE_INTERVAL	 2
-#define MAX_CONFLICTS		10
-#define RATE_LIMIT_INTERVAL	60
-#define DEFEND_INTERVAL		10
+#include <limits.h>
+#include <poll.h>
+#include <signal.h>
+#include <unistd.h>
 
-#include "dhcpcd.h"
+#include "pollts.h"
 
-void arp_announce(void *);
-void arp_probe(void *);
-void arp_start(struct interface *);
-#endif
+#warning "This pollts(2) implementation is not entirely race condition safe."
+#warning "Only operating system support for pollts(2) can correct this."
+
+int
+pollts(struct pollfd *restrict fds, nfds_t nfds,
+    const struct timespec *restrict ts, const sigset_t *restrict sigmask)
+{
+	int r, timeout;
+	sigset_t oldset;
+
+	if (ts == NULL)
+		timeout = -1;
+	else if (ts->tv_sec > INT_MAX / 1000 ||
+	    (ts->tv_sec == INT_MAX / 1000 &&
+	    (ts->tv_nsec + 999999) / 1000000 > INT_MAX % 1000000))
+		timeout = INT_MAX;
+	else
+		timeout = ts->tv_sec * 1000 + (ts->tv_nsec + 999999) / 1000000;
+	if (sigmask && sigprocmask(SIG_SETMASK, sigmask, &oldset) == -1)
+		return -1;
+	r = poll(fds, nfds, timeout);
+	if (sigmask && sigprocmask(SIG_SETMASK, &oldset, NULL) == -1)
+		return -1;
+
+	return r;
+}

@@ -25,24 +25,33 @@
  * SUCH DAMAGE.
  */
 
-#ifndef ARP_H
-#define ARP_H
+#ifndef ELOOP_H
+#define ELOOP_H
 
-/* ARP timings from RFC5227 */
-#define PROBE_WAIT		 1
-#define PROBE_NUM		 3
-#define PROBE_MIN		 1
-#define PROBE_MAX		 2
-#define ANNOUNCE_WAIT		 2
-#define ANNOUNCE_NUM		 2
-#define ANNOUNCE_INTERVAL	 2
-#define MAX_CONFLICTS		10
-#define RATE_LIMIT_INTERVAL	60
-#define DEFEND_INTERVAL		10
+#include <time.h>
 
-#include "dhcpcd.h"
+#ifndef ELOOP_QUEUE
+  #define ELOOP_QUEUE 1
+#endif
 
-void arp_announce(void *);
-void arp_probe(void *);
-void arp_start(struct interface *);
+#define eloop_timeout_add_tv(a, b, c) \
+    eloop_q_timeout_add_tv(ELOOP_QUEUE, a, b, c)
+#define eloop_timeout_add_sec(a, b, c) \
+    eloop_q_timeout_add_sec(ELOOP_QUEUE, a, b, c)
+#define eloop_timeout_delete(a, b) \
+    eloop_q_timeout_delete(ELOOP_QUEUE, a, b)
+#define eloop_timeouts_delete(a, ...) \
+    eloop_q_timeouts_delete(ELOOP_QUEUE, a, __VA_ARGS__)
+
+int eloop_event_add(int fd, void (*)(void *), void *);
+void eloop_event_delete(int fd);
+int eloop_q_timeout_add_sec(int queue, time_t, void (*)(void *), void *);
+int eloop_q_timeout_add_tv(int queue, const struct timeval *, void (*)(void *),
+    void *);
+int eloop_timeout_add_now(void (*)(void *), void *);
+void eloop_q_timeout_delete(int, void (*)(void *), void *);
+void eloop_q_timeouts_delete(int, void *, void (*)(void *), ...);
+void eloop_init(void);
+void eloop_start(const sigset_t *);
+
 #endif

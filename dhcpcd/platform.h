@@ -25,24 +25,15 @@
  * SUCH DAMAGE.
  */
 
-#ifndef ARP_H
-#define ARP_H
+#ifndef PLATFORM_H
+#define PLATFORM_H
 
-/* ARP timings from RFC5227 */
-#define PROBE_WAIT		 1
-#define PROBE_NUM		 3
-#define PROBE_MIN		 1
-#define PROBE_MAX		 2
-#define ANNOUNCE_WAIT		 2
-#define ANNOUNCE_NUM		 2
-#define ANNOUNCE_INTERVAL	 2
-#define MAX_CONFLICTS		10
-#define RATE_LIMIT_INTERVAL	60
-#define DEFEND_INTERVAL		10
+char *hardware_platform(void);
+#ifdef INET6
+int check_ipv6(const char *, int);
+int ipv6_dadtransmits(const char *);
+#else
+#define check_ipv6(a, b) -1
+#endif
 
-#include "dhcpcd.h"
-
-void arp_announce(void *);
-void arp_probe(void *);
-void arp_start(struct interface *);
 #endif
